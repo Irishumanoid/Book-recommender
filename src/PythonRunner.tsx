@@ -106,7 +106,7 @@ const PythonRunner = () => {
 
   return (
     <Box>
-      <Typography variant='h2'>Get all your spicy book recs</Typography>
+      <Typography variant='h2'>get all your spicy book recs</Typography>
       <Stack direction='row' justifyContent='center'>
         <TextField 
           placeholder='Book Name Here' 
