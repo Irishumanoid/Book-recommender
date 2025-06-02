@@ -29,7 +29,7 @@ const loadCSV = (csvUrl: string): Promise<any[]> => {
 const PythonRunner = () => {
   const [books, setBooks] = useState<BookData[] | null>(null); // TODO display as dropdown directory
   const [numBooks, setNumBooks] = useState(10);
-  const [recs, setRecs] = useState<String[] | null>(null);
+  const [recs, setRecs] = useState<Map<String, number> | null>(null);
   const [query, setQuery] = useState('');
   const entriesPerPage = 10;
   const [paginator, setPaginator] = useState({
@@ -56,20 +56,6 @@ const PythonRunner = () => {
           .map((row: any) => createBookData(row['id'], row['name'], row['book info']));
         setBooks(results);
       });
-
-      await fetch('http://127.0.0.1:5000/api/recommend', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({'title': 'The Hunger Games', 'num_books': numBooks})
-        })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('failed response for book recommendations');
-          }
-          return response.json();
-          })
-        .then(data => console.log(data))
-        .catch(error => console.error('there was an error retrieving the response', error));
       };
     loadData();
   }, []);
@@ -90,7 +76,8 @@ const PythonRunner = () => {
       }
       const data = await response.json();
       const recs = data['results'];
-      setRecs(recs);
+      const recsMap = new Map<string, number>(Object.entries(recs));
+      setRecs(recsMap);
     } catch (error) {
       console.error('there was an error retrieving the response', error)
     }
@@ -123,7 +110,15 @@ const PythonRunner = () => {
         <Button onClick={() => fetchRecs(query)}>Get recs</Button>
       </Stack>
       {recs && 
-        <Typography variant='h6' paddingTop='30px'> Recommendations for query are: {recs.join(', ')} </Typography>
+        <Box>
+          <Typography variant='h5' paddingTop='30px'> 
+            Recommendations for query
+          </Typography>
+            {recs.size !== 0 && Array.from(Array.from(recs).map(entry => `${entry[0]} (${entry[1]})`)).reverse().map(e => 
+              <Typography>{e}</Typography>
+            )}
+            {recs.size == 0 && <Typography> Searched title not found in database </Typography>}
+        </Box>
       }
       <Box paddingX='150px' paddingY='30px'>
         <List>
