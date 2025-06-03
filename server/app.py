@@ -14,7 +14,7 @@ def recommend():
         return jsonify({'error': 'title not found'}), 400
     
     results = recommend_book(title, n_books)
-    return jsonify({'results': results})
+    return jsonify({'results': dict(results)})
 
 @app.route('/api/get_books', methods=['POST'])
 def get_books():

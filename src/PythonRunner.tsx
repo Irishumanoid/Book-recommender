@@ -1,6 +1,6 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import Papa from 'papaparse';
-import { Button, TextField, Stack, Typography, Box, Paper, List, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Pagination } from "@mui/material";
+import { Button, TextField, Stack, Typography, Box, Paper, List, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, Pagination, CircularProgress } from "@mui/material";
 
 
 interface BookData {
@@ -30,6 +30,7 @@ const PythonRunner = () => {
   const [books, setBooks] = useState<BookData[] | null>(null); // TODO display as dropdown directory
   const [numBooks, setNumBooks] = useState(10);
   const [recs, setRecs] = useState<Map<String, number> | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [query, setQuery] = useState('');
   const entriesPerPage = 10;
   const [paginator, setPaginator] = useState({
@@ -62,6 +63,7 @@ const PythonRunner = () => {
 
 
   const fetchRecs = async (bookName: string) => {
+    setIsLoading(true);
     console.log(`query is ${bookName}`)
     try {
       const response = await fetch('http://127.0.0.1:5000/api/recommend', {
@@ -78,6 +80,7 @@ const PythonRunner = () => {
       const recs = data['results'];
       const recsMap = new Map<string, number>(Object.entries(recs));
       setRecs(recsMap);
+      setIsLoading(false);
     } catch (error) {
       console.error('there was an error retrieving the response', error)
     }
@@ -94,29 +97,48 @@ const PythonRunner = () => {
   return (
     <Box>
       <Typography variant='h2'>get all your spicy book recs</Typography>
-      <Stack direction='row' justifyContent='center'>
+      <Stack direction='row' justifyContent='center' alignItems='center' spacing={2}>
         <TextField 
           placeholder='Book Name Here' 
           onChange={(e) => setQuery(e.target.value)} 
           sx={{ backgroundColor: 'whitesmoke', borderRadius: '8px' }}
         />
         <TextField 
-          placeholder='Number of recs' 
+          placeholder='Num recs' 
           type='number'
           onChange={(e) => setNumBooks(Number(e.target.value))}
           inputProps={{ min: 1, max: 200 }}
-          sx={{ inputMode: 'numeric', pattern: '[0-9]*', backgroundColor: 'whitesmoke', borderRadius: '8px'}}
+          sx={{ inputMode: 'numeric', pattern: '[0-9]*', width: '120px', backgroundColor: 'whitesmoke', borderRadius: '8px'}}
         />
-        <Button onClick={() => fetchRecs(query)}>Get recs</Button>
+        <Box sx={{ position: 'relative', width: '100px', height: '36px' }}>
+          <Button 
+            onClick={() => fetchRecs(query)} 
+            disabled={isLoading}
+            sx={{ color: 'white', width: '100%', height: '100%' }}>
+              Get recs
+          </Button>
+          {isLoading && (
+            <CircularProgress sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />
+          )}
+        </Box>
       </Stack>
       {recs && 
         <Box>
           <Typography variant='h5' paddingTop='30px'> 
             Recommendations for query
           </Typography>
-            {recs.size !== 0 && Array.from(Array.from(recs).map(entry => `${entry[0]} (${entry[1]})`)).reverse().map(e => 
-              <Typography>{e}</Typography>
-            )}
+            {recs.size !== 0 && 
+              Array.from(recs.entries())
+                .sort((a, b) => a[1] - b[1]).reverse()
+                  .map(([name, score]) => (
+                    <Box display='flex' justifyContent='center' alignItems='center' paddingY='2px'>
+                      <Paper elevation={2} sx={{ p: 2, width: '500px' }}>
+                        <Typography>{name}</Typography>
+                        <Typography variant='caption' color="text.secondary"> Score: {score}</Typography>
+                      </Paper>
+                    </Box>
+                  ))
+                }
             {recs.size == 0 && <Typography> Searched title not found in database </Typography>}
         </Box>
       }
