@@ -15,7 +15,12 @@ def recommend():
         return jsonify({'error': 'title not found'}), 400
     
     results = recommend_book(title, n_books)
-    return jsonify({'results': dict(results)})
+    recs = dict(results[0])
+    closest_title = results[1]
+    if closest_title != '':
+        return jsonify({'results': recs, 'closest': closest_title})
+    else:
+        return jsonify({'results': recs})
 
 @app.route('/api/get_books', methods=['POST'])
 def get_books():
@@ -24,5 +29,6 @@ def get_books():
     
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    '''port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)'''
+    app.run(debug=True)

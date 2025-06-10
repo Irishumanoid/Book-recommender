@@ -27,11 +27,12 @@ const loadCSV = (csvUrl: string): Promise<any[]> => {
 };
 
 const PythonRunner = () => {
-  const [books, setBooks] = useState<BookData[] | null>(null); // TODO display as dropdown directory
+  const [books, setBooks] = useState<BookData[] | null>(null); 
   const [numBooks, setNumBooks] = useState(10);
   const [recs, setRecs] = useState<Map<String, number> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [query, setQuery] = useState('');
+  const [closestBook, setClosestBook] = useState('');
   const entriesPerPage = 10;
   const [paginator, setPaginator] = useState({
     from: 0,
@@ -78,6 +79,8 @@ const PythonRunner = () => {
       }
       const data = await response.json();
       const recs = data['results'];
+      const closestBook = data['closest']
+      setClosestBook(closestBook);
       const recsMap = new Map<string, number>(Object.entries(recs));
       setRecs(recsMap);
       setIsLoading(false);
@@ -139,7 +142,7 @@ const PythonRunner = () => {
                     </Box>
                   ))
                 }
-            {recs.size == 0 && <Typography> Searched title not found in database </Typography>}
+            {closestBook != '' && <Typography> Closest title found: {closestBook} </Typography>}
         </Box>
       }
       <Box paddingX='150px' paddingY='30px'>
